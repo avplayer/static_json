@@ -1,4 +1,11 @@
-﻿#include <iostream>
+﻿//
+// Copyright (C) 2019 Jack.
+//
+// Author: jack
+// Email:  jack.wgm at gmail dot com
+//
+
+#include <iostream>
 #include "static_json.hpp"
 
 using namespace static_json;
@@ -12,8 +19,8 @@ public:
 	void set_ismammal(bool b) { is_mammal = b; };
 	void set_height(double h) { height = h; }
 
-	//private:
-	//	friend struct static_json::access;
+	friend std::ostream& operator<< (std::ostream&, const animal&);
+
 
 #if 0
 	// 侵入式使用JSON_SERIALIZATION_NVP 或 JSON_SERIALIZATION_BASE_OBJECT_NVP
@@ -38,6 +45,19 @@ private:
 	double height;
 };
 
+std::ostream& operator<< (std::ostream& stream, const animal& a)
+{
+	stream	<< "animal [legs: " << a.legs
+			<< " is_mammal: " << a.is_mammal
+			<< " name: " << a.name
+			<< " height: " << a.height
+			<< "]"
+	;
+
+	return stream;
+}
+
+
 #if 1
 // 非侵入式, 使用JSON_NI_SERIALIZATION_NVP 或 JSON_NI_SERIALIZATION_BASE_OBJECT_NVP
 template<class Archive>
@@ -53,12 +73,20 @@ void serialize(Archive& ar, animal& a)
 struct human {
 	std::string hand;
 
+	friend std::ostream& operator<< (std::ostream&, const human&);
+
 	template<class Archive>
 	void serialize(Archive& ar)
 	{
 		ar	& JSON_SERIALIZATION_NVP(hand);
 	}
 };
+
+std::ostream& operator<< (std::ostream& stream, const human& h)
+{
+	stream << "human [hand: " << h.hand << "]";
+	return stream;
+}
 
 // 非侵入式.
 
@@ -100,6 +128,8 @@ public:
 		man.hand = u8"鸟人的paw";
 	}
 
+	friend std::ostream& operator<< (std::ostream&, const bird&);
+
 private:
 	friend struct static_json::access; // 放入private中时需要添加为友员.
 
@@ -120,6 +150,25 @@ private:
 	human man;
 };
 
+std::ostream& operator<< (std::ostream& stream, const bird& b)
+{
+	stream	<< "bird[" << dynamic_cast<const animal&>(b)
+			<< " can_fly: " << b.can_fly
+			<< " fat: [";
+	for (const auto& f : b.fat)
+		stream << f;
+		stream
+			<< "]"
+			<< " money: [";
+	for (const auto& m : b.money)
+		stream << "[" << m << "]";
+		stream
+			<< "]"
+			<< " man: " << b.man
+			<< "]";
+	return stream;
+}
+
 int main()
 {
 	rapidjson::Value json{ rapidjson::kObjectType };
@@ -139,12 +188,15 @@ int main()
 			rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 			json.Accept(writer);
 
-			std::cout << buffer.GetString() << std::endl;
+			std::cout << "animal -> json: " << buffer.GetString() << std::endl;
 		}
 
 		// 反序列化json到普通结构体, b 此时和 a 的值完全相同.
 		animal b;
 		from_json(b, json);
+
+		std::cout << "a = " << a << std::endl;
+		std::cout << "b = " << b << std::endl;
 	}
 
 	// 清空一下json, 用于下面测试.
@@ -152,23 +204,37 @@ int main()
 	json.Swap(empty);
 
 	{
-		bird b(4, true);
+		bird c(4, true);
 
-		b.set_name("Horse");
-		b.set_ismammal(true);
-		b.set_height(9.83);
-		to_json(b, json);
+		c.set_name("Horse");
+		c.set_ismammal(true);
+		c.set_height(9.83);
+		to_json(c, json);
 
 		rapidjson::StringBuffer buffer;
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 		json.Accept(writer);
 
-		std::cout << buffer.GetString() << std::endl;
+		std::cout << "bird -> json: " << buffer.GetString() << std::endl;
 
 		bird d;
 		from_json(d, json);
 
-		// 这里d的值和b的值完全相同.
+		// 这里c的值和d的值完全相同.
+		std::cout << "c = " << c << std::endl;
+		std::cout << "d = " << d << std::endl;
+	}
+
+	// 普通对象和json字符串之间的转换.
+	{
+		const char* json_str = R"({"legs":4,"is_mammal":true,"height":9.83,"name":"Horse"})";
+
+		animal a;
+		from_json_string(a, json_str);
+
+		std::cout << "string -> animal: " << a << std::endl;
+
+		std::cout << "animal -> string: " << to_json_string(a);
 	}
 
 	return 0;

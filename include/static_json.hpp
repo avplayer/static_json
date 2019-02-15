@@ -1,4 +1,11 @@
-﻿#pragma once
+﻿//
+// Copyright (C) 2019 Jack.
+//
+// Author: jack
+// Email:  jack.wgm at gmail dot com
+//
+
+#pragma once
 
 #include <string>
 #include <memory>
@@ -498,5 +505,30 @@ namespace static_json {
 	{
 		json_iarchive ja(json);
 		ja >> a;
+	}
+
+	template<class T>
+	void from_json_string(T& a, std::string_view str)
+	{
+		rapidjson::Document doc;
+		doc.Parse(str.data());
+
+		rapidjson::Value v;
+		doc.Swap(v);
+
+		from_json(a, v);
+	}
+
+	template<class T>
+	std::string to_json_string(T& a)
+	{
+		rapidjson::Value v{ rapidjson::kObjectType };
+		to_json(a, v);
+
+		rapidjson::StringBuffer buffer;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		v.Accept(writer);
+
+		return buffer.GetString();
 	}
 }
