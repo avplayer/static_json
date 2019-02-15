@@ -121,7 +121,7 @@ namespace static_json {
 
 		static rapidjson::Document::AllocatorType&
 			rapidjson_ugly_document_alloc() {
-			if (document_ == nullptr)
+			if (!document_)
 				document_.reset(new rapidjson::Document{ rapidjson::kObjectType });
 			return document_->GetAllocator();
 		}
