@@ -174,7 +174,7 @@ int main()
 	rapidjson::Value json{ rapidjson::kObjectType };
 
 	{
-		// 普通结构体序列化到json对象.
+		// 普通c++结构体序列化到json对象.
 		animal a;
 		a.set_name("Horse");
 		a.set_leg(4);
@@ -191,7 +191,7 @@ int main()
 			std::cout << "animal -> json: " << buffer.GetString() << std::endl;
 		}
 
-		// 反序列化json到普通结构体, b 此时和 a 的值完全相同.
+		// 反序列化json到普通c++结构体, b 此时和 a 的值完全相同.
 		animal b;
 		from_json(b, json);
 
@@ -225,7 +225,7 @@ int main()
 		std::cout << "d = " << d << std::endl;
 	}
 
-	// 普通对象和json字符串之间的转换.
+	// 普通c++结构和json字符串之间的转换.
 	{
 		const char* json_str = u8R"({"legs":4,"is_mammal":true,"height":9.83,"name":"大象"})";
 
