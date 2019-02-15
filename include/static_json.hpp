@@ -427,13 +427,13 @@ namespace static_json {
 				switch (0) { case 0:
 					if constexpr (detail::has_value_type_v<T>) // 如果是vector数组, 则判断类型.
 					{
-#if 0
-						if (!std::is_same_v<std::decay_t<T>,
+#if 1
+						if constexpr (!std::is_same_v<std::decay_t<T>,
 							std::vector<typename T::value_type, typename T::allocator_type>>)
 						{
-// 							temp.SetObject();
-// 							json_oarchive ja(temp);
-// 							ja << b;
+							temp.SetObject();
+							json_oarchive ja(temp);
+							ja << b;
 							break;
 						}
 #endif
@@ -443,8 +443,17 @@ namespace static_json {
 							rapidjson::Value arr;
 
 							using array_type = std::decay_t<typename T::value_type>;
-							if constexpr (detail::is_detected_exact_v<void, access::has_serialize, array_type, json_oarchive>
-								|| detail::is_detected_exact_v<void, access::has_nonmember_serialize, json_oarchive, array_type>)
+							constexpr bool have_serialize_member =
+								detail::is_detected_exact_v<void,
+								access::has_serialize,
+								array_type,
+								json_oarchive>;
+							constexpr bool have_nonmember_serialize =
+								detail::is_detected_exact_v<void,
+								access::has_nonmember_serialize,
+								json_oarchive,
+								array_type>;
+							if constexpr (have_serialize_member || have_nonmember_serialize)
 							{
 								arr.SetObject();
 								json_oarchive ja(arr);
@@ -458,10 +467,6 @@ namespace static_json {
 
 							temp.PushBack(arr, access::rapidjson_ugly_document_alloc());
 						}
-
-						// 完成添加数组, 直接返回.
-						json_.AddMember(rapidjson::StringRef(name), temp, access::rapidjson_ugly_document_alloc());
-						return;
 					}
 					else
 					{
@@ -483,15 +488,6 @@ namespace static_json {
 
 		rapidjson::Value& json_;
 	};
-
-#if 1
-	// 非侵入式.
-	template<class Archive, class Value>
-	void serialize(Archive& ar, std::vector<Value>& v)
-	{
-		// TODO: 直接序列化vector到json暂时不作实现, 仅用于json object中的数组时, 匹配使用.
-	}
-#endif
 
 	template<class T>
 	void to_json(const T& a, rapidjson::Value& json)
