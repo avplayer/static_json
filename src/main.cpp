@@ -80,10 +80,16 @@ public:
 		// 添加一些测试数据.
 		auto tmp = *this;
 		tmp.set_leg(10);
+		tmp.set_name("fuck");
+		tmp.set_ismammal(true);
+		tmp.set_height(9.83);
+
 		fat.push_back(tmp);
 		tmp.set_leg(11);
+		tmp.set_height(10.83);
 		fat.push_back(tmp);
 		tmp.set_leg(12);
+		tmp.set_height(11.83);
 		fat.push_back(tmp);
 
 		money.push_back(100);
