@@ -80,7 +80,10 @@ if (NOT MSVC)
 endif()
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/static_json)
+include_directories(
+${CMAKE_CURRENT_SOURCE_DIR}/include
+${CMAKE_CURRENT_SOURCE_DIR}/include/rapidjson/include
+)
 
 add_executable(static_json
   src/main.cpp
