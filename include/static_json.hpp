@@ -477,13 +477,14 @@ namespace static_json {
 		rapidjson::Value& json_;
 	};
 
+#if 1
 	// 非侵入式.
 	template<class Archive, class Value>
 	void serialize(Archive& ar, std::vector<Value>& v)
 	{
 		// TODO: 直接序列化vector到json暂时不作实现, 仅用于json object中的数组时, 匹配使用.
 	}
-
+#endif
 
 	template<class T>
 	void to_json(const T& a, rapidjson::Value& json)
