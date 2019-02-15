@@ -227,7 +227,7 @@ int main()
 
 	// 普通对象和json字符串之间的转换.
 	{
-		const char* json_str = R"({"legs":4,"is_mammal":true,"height":9.83,"name":"Horse"})";
+		const char* json_str = u8R"({"legs":4,"is_mammal":true,"height":9.83,"name":"大象"})";
 
 		animal a;
 		from_json_string(a, json_str);
