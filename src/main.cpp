@@ -19,6 +19,7 @@ public:
 	void set_ismammal(bool b) { is_mammal = b; };
 	void set_height(double h) { height = h; }
 
+	// 用于输出animal到std::cout.
 	friend std::ostream& operator<< (std::ostream&, const animal&);
 
 
