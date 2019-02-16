@@ -29,71 +29,15 @@
 namespace static_json {
 
 	namespace detail {
+		template<class T>
+		using has_push_back_t = decltype(std::declval<T&>().push_back(std::declval<typename T::value_type&>()));
 
-		template<typename...> using __void_t = void;
-
-		struct nonesuch
-		{
-			nonesuch() = delete;
-			~nonesuch() = delete;
-			nonesuch(nonesuch const&) = delete;
-			void operator=(nonesuch const&) = delete;
-		};
-
-		template<typename _Default, typename _AlwaysVoid,
-			template<typename...> class _Op, typename... _Args>
-		struct __detector
-		{
-			using value_t = std::false_type;
-			using type = _Default;
-		};
-
-		template<typename _Default, template<typename...> class _Op,
-			typename... _Args>
-			struct __detector<_Default, __void_t<_Op<_Args...>>, _Op, _Args...>
-		{
-			using value_t = std::true_type;
-			using type = _Op<_Args...>;
-		};
-
-		template<typename _Default, template<typename...> class _Op,
-			typename... _Args>
-			using __detected_or = __detector<_Default, void, _Op, _Args...>;
-
-		template<typename _Default, template<typename...> class _Op,
-			typename... _Args>
-			using __detected_or_t
-			= typename __detected_or<_Default, _Op, _Args...>::type;
-
-		template<template<typename...> class _Op, typename... _Args>
-		using is_detected
-			= typename __detector<nonesuch, void, _Op, _Args...>::value_t;
-
-		template<template<typename...> class _Op, typename... _Args>
-		constexpr bool is_detected_v = is_detected<_Op, _Args...>::value;
-
-		template<template<typename...> class _Op, typename... _Args>
-		using detected_t
-			= typename __detector<nonesuch, void, _Op, _Args...>::type;
-
-		template<typename _Default, template<typename...> class _Op, typename... _Args>
-		using detected_or = __detected_or<_Default, _Op, _Args...>;
-
-		template<typename _Default, template<typename...> class _Op, typename... _Args>
-		using detected_or_t = typename detected_or<_Default, _Op, _Args...>::type;
-
-		template<typename Expected, template<typename...> class _Op, typename... _Args>
-		using is_detected_exact = std::is_same<Expected, detected_t<_Op, _Args...>>;
-
-		template<typename Expected, template<typename...> class _Op, typename... _Args>
-		constexpr bool is_detected_exact_v
-			= is_detected_exact<Expected, _Op, _Args...>::value;
-
-		template<typename T>
-		using has_value_type_t = typename T::value_type;
-		template<typename T>
-		constexpr bool has_value_type_v = is_detected_v<has_value_type_t, T>;
-
+		template<class T, bool result = std::is_same_v<void, has_push_back_t<T>>>
+		constexpr bool has_push_back_helper(int) { return result; }
+		template<class T>
+		static constexpr bool has_push_back_helper(...) { return false; }
+		template<class T>
+		static constexpr bool has_push_back() { return has_push_back_helper<T>(0); }
 	} // namespace detail
 
 	template<class T>
@@ -137,13 +81,29 @@ namespace static_json {
 			document_.reset(doc);
 		}
 
-		template<class T, class Archive>
-		using has_serialize = decltype(std::declval<T&>().serialize(std::declval<Archive&>()));
-		template<class Archive, class T>
-		using has_nonmember_serialize = decltype(serialize(std::declval<Archive&>(), std::declval<T&>()));
-
 		template<class B, class D>
 		using base_cast = std::conditional<std::is_const_v<D>, const B, B>;
+
+		template<class T, class Archive>
+		using has_serialize_t = decltype(std::declval<T&>().serialize(std::declval<Archive&>()));
+		template<class Archive, class T>
+		using has_nonmember_serialize_t = decltype(serialize(std::declval<Archive&>(), std::declval<T&>()));
+
+		// has_serialize_member 实现.
+		template<class Archive, class T, bool result = std::is_same_v<void, has_serialize_t<T, Archive>>>
+		static constexpr bool has_serialize_helper(int) { return result; }
+		template<class Archive, class T>
+		static constexpr bool has_serialize_helper(...) { return false; }
+		template<class Archive, class T>
+		static constexpr bool has_serialize_member() { return has_serialize_helper<Archive, T>(0); }
+
+		// has_nonmember_serialize 实现.
+		template<class Archive, class T, bool result = std::is_same_v<void, has_nonmember_serialize_t<Archive, T>>>
+		static constexpr bool has_nonmember_serialize_helper(int) { return result; }
+		template<class Archive, class T>
+		static constexpr bool has_nonmember_serialize_helper(...) { return false; }
+		template<class Archive, class T>
+		static constexpr bool has_nonmember_serialize() { return has_nonmember_serialize_helper<Archive, T>(0); }
 
 		template<class T, class U>
 		static T & cast_reference(U & u) {
@@ -153,11 +113,11 @@ namespace static_json {
 		template<class Archive, class T>
 		static void serialize_entry(Archive & ar, T & t)
 		{
-			if constexpr (detail::is_detected_exact_v<void, has_serialize, T, Archive>)
+			if constexpr (has_serialize_member<Archive, T>())
 			{
 				t.serialize(ar);
 			}
-			else if constexpr (detail::is_detected_exact_v<void, has_nonmember_serialize, Archive, T>)
+			else if constexpr (has_nonmember_serialize<Archive, T>())
 			{
 				serialize(ar, t);
 			}
@@ -177,7 +137,6 @@ namespace static_json {
 		typedef typename static_json::access::base_cast<Base, Derived>::type type;
 		return static_json::access::cast_reference<type, Derived>(d);
 	}
-
 
 #define JSON_PP_STRINGIZE(text) JSON_PP_STRINGIZE_I(text)
 #define JSON_PP_STRINGIZE_I(...) #__VA_ARGS__
@@ -275,7 +234,10 @@ namespace static_json {
 			{
 				if constexpr (!std::is_arithmetic_v<std::decay_t<T>>
 					&& !std::is_same_v<std::decay_t<T>, std::string>
-					&& !detail::has_value_type_v<T>)
+					&&
+					   !detail::has_push_back<T>()
+					// !detail::has_value_type_v<T>
+					)
 				{
 					json_iarchive ja(v);
 					ja >> b;
@@ -284,29 +246,26 @@ namespace static_json {
 			break;
 			case rapidjson::kArrayType:
 			{
-				if constexpr (detail::has_value_type_v<T>) // 如果是vector数组, 则判断类型.
+				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
 				{
-					if (std::is_same_v<std::decay_t<T>,
-						std::vector<typename T::value_type, typename T::allocator_type>>)
+					for (auto& a : v.GetArray())
 					{
-						for (auto& a : v.GetArray())
+						using array_type = std::decay_t<typename T::value_type>;
+
+						if constexpr (access::has_serialize_member<json_iarchive, array_type>()
+							|| access::has_nonmember_serialize<json_iarchive, array_type>())
 						{
-							using array_type = std::decay_t<typename T::value_type>;
-							if constexpr (detail::is_detected_exact_v<void, access::has_serialize, array_type, json_iarchive>
-								|| detail::is_detected_exact_v<void, access::has_nonmember_serialize, json_iarchive, array_type>)
-							{
-								json_iarchive ja(a);
-								typename T::value_type item;
-								ja >> item;
-								b.push_back(item);
-							}
-							else
-							{
-								array_type tmp;
-								json_input_builtin<array_type> ja(a);
-								ja >> tmp;
-								b.push_back(tmp);
-							}
+							json_iarchive ja(a);
+							typename T::value_type item;
+							ja >> item;
+							b.push_back(item);
+						}
+						else
+						{
+							array_type tmp;
+							json_input_builtin<array_type> ja(a);
+							ja >> tmp;
+							b.push_back(tmp);
 						}
 					}
 				}
@@ -424,56 +383,36 @@ namespace static_json {
 			}
 			else
 			{
-				switch (0) { case 0:
-					if constexpr (detail::has_value_type_v<T>) // 如果是vector数组, 则判断类型.
+				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
+				{
+					temp.SetArray();
+					for (auto& n : b)
 					{
-#if 1
-						if constexpr (!std::is_same_v<std::decay_t<T>,
-							std::vector<typename T::value_type, typename T::allocator_type>>)
-						{
-							temp.SetObject();
-							json_oarchive ja(temp);
-							ja << b;
-							break;
-						}
-#endif
-						temp.SetArray();
-						for (auto& n : b)
-						{
-							rapidjson::Value arr;
+						rapidjson::Value arr;
 
-							using array_type = std::decay_t<typename T::value_type>;
-							constexpr bool have_serialize_member =
-								detail::is_detected_exact_v<void,
-								access::has_serialize,
-								array_type,
-								json_oarchive>;
-							constexpr bool have_nonmember_serialize =
-								detail::is_detected_exact_v<void,
-								access::has_nonmember_serialize,
-								json_oarchive,
-								array_type>;
-							if constexpr (have_serialize_member || have_nonmember_serialize)
-							{
-								arr.SetObject();
-								json_oarchive ja(arr);
-								ja << n;
-							}
-							else
-							{
-								json_output_builtin<array_type> ja(arr);
-								ja << n;
-							}
+						using array_type = std::decay_t<typename T::value_type>;
 
-							temp.PushBack(arr, access::rapidjson_ugly_document_alloc());
+						if constexpr (access::has_serialize_member<json_iarchive, array_type>()
+							|| access::has_nonmember_serialize<json_iarchive, array_type>())
+						{
+							arr.SetObject();
+							json_oarchive ja(arr);
+							ja << n;
 						}
+						else
+						{
+							json_output_builtin<array_type> ja(arr);
+							ja << n;
+						}
+
+						temp.PushBack(arr, access::rapidjson_ugly_document_alloc());
 					}
-					else
-					{
-						temp.SetObject();
-						json_oarchive ja(temp);
-						ja << b;
-					}
+				}
+				else
+				{
+					temp.SetObject();
+					json_oarchive ja(temp);
+					ja << b;
 				}
 			}
 
@@ -488,6 +427,7 @@ namespace static_json {
 
 		rapidjson::Value& json_;
 	};
+
 
 	template<class T>
 	void to_json(const T& a, rapidjson::Value& json)
