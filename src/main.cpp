@@ -14,6 +14,7 @@ class animal {
 public:
 	animal() {}
 	animal(int l) : legs(l) {}
+	void set_age(int64_t a) { age = a; }
 	void set_leg(int l) { legs = l; };
 	void set_name(std::string s) { name = s; };
 	void set_ismammal(bool b) { is_mammal = b; };
@@ -28,7 +29,8 @@ public:
 	template <typename Archive>
 	void serialize(Archive &ar)
 	{
-		ar	& JSON_SERIALIZATION_NVP(legs)
+		ar	& JSON_SERIALIZATION_NVP(age)
+			& JSON_SERIALIZATION_NVP(legs)
 			& JSON_SERIALIZATION_NVP(is_mammal)
 			& JSON_SERIALIZATION_NVP(height)
 			& JSON_SERIALIZATION_NVP(name);
@@ -40,6 +42,7 @@ public:
 #endif
 
 private:
+	int64_t age;
 	int legs;
 	bool is_mammal;
 	std::string name;
@@ -48,7 +51,8 @@ private:
 
 std::ostream& operator<< (std::ostream& stream, const animal& a)
 {
-	stream	<< "animal [legs: " << a.legs
+	stream	<< "animal [age: " << a.age
+			<< " legs: " << a.legs
 			<< " is_mammal: " << a.is_mammal
 			<< " name: " << a.name
 			<< " height: " << a.height
@@ -64,7 +68,8 @@ std::ostream& operator<< (std::ostream& stream, const animal& a)
 template<class Archive>
 void serialize(Archive& ar, animal& a)
 {
-	ar	& JSON_NI_SERIALIZATION_NVP(a, legs)
+	ar	& JSON_NI_SERIALIZATION_NVP(a, age)
+		& JSON_NI_SERIALIZATION_NVP(a, legs)
 		& JSON_NI_SERIALIZATION_NVP(a, is_mammal)
 		& JSON_NI_SERIALIZATION_NVP(a, height)
 		& JSON_NI_SERIALIZATION_NVP(a, name);
@@ -108,6 +113,7 @@ public:
 
 		// 添加一些测试数据.
 		auto tmp = *this;
+		tmp.set_age(1234567890);
 		tmp.set_leg(10);
 		tmp.set_name("fuck");
 		tmp.set_ismammal(true);
@@ -177,6 +183,7 @@ int main()
 	{
 		// 普通c++结构体序列化到json对象.
 		animal a;
+		a.set_age(1000234234235);
 		a.set_name("Horse");
 		a.set_leg(4);
 		a.set_ismammal(true);
@@ -207,6 +214,7 @@ int main()
 	{
 		bird c(4, true);
 
+		c.set_age(383483411113);
 		c.set_name("Horse");
 		c.set_ismammal(true);
 		c.set_height(9.83);
@@ -228,7 +236,7 @@ int main()
 
 	// 普通c++结构和json字符串之间的转换.
 	{
-		const char* json_str = u8R"({"legs":4,"is_mammal":true,"height":9.83,"name":"大象"})";
+		const char* json_str = u8R"({"age":9876543210,"legs":4,"is_mammal":true,"height":9.83,"name":"大象"})";
 
 		animal a;
 		from_json_string(a, json_str);
