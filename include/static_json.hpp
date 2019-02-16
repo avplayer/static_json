@@ -223,10 +223,11 @@ namespace static_json {
 		template <typename T>
 		void load(char const* name, T& b) const
 		{
-			assert(json_.HasMember(name) && "has member must true!");
+			if (!json_.HasMember(name))
+				return;
 
-			auto& v = json_[name];
-			switch (v.GetType())
+			auto& value = json_[name];
+			switch (value.GetType())
 			{
 			case rapidjson::kNullType:
 				break;
@@ -236,7 +237,7 @@ namespace static_json {
 					&& !std::is_same_v<std::decay_t<T>, std::string>
 					&& !detail::has_push_back<T>())
 				{
-					json_iarchive ja(v);
+					json_iarchive ja(value);
 					ja >> b;
 				}
 			}
@@ -245,7 +246,7 @@ namespace static_json {
 			{
 				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
 				{
-					for (auto& a : v.GetArray())
+					for (auto& a : value.GetArray())
 					{
 						using array_type = std::decay_t<typename T::value_type>;
 
@@ -274,7 +275,7 @@ namespace static_json {
 			{
 				if constexpr (std::is_arithmetic_v<std::decay_t<T>>)
 				{
-					json_input_builtin<T> ja(v);
+					json_input_builtin<T> ja(value);
 					ja >> b;
 				}
 			}
@@ -283,7 +284,7 @@ namespace static_json {
 			{
 				if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
 				{
-					json_input_builtin<std::string> ja(v);
+					json_input_builtin<std::string> ja(value);
 					ja >> b;
 				}
 			}
