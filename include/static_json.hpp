@@ -234,10 +234,7 @@ namespace static_json {
 			{
 				if constexpr (!std::is_arithmetic_v<std::decay_t<T>>
 					&& !std::is_same_v<std::decay_t<T>, std::string>
-					&&
-					   !detail::has_push_back<T>()
-					// !detail::has_value_type_v<T>
-					)
+					&& !detail::has_push_back<T>())
 				{
 					json_iarchive ja(v);
 					ja >> b;
