@@ -26,17 +26,21 @@ namespace static_json {
 	template<class T>
 	struct nvp;
 
-	static std::unique_ptr<rapidjson::Document> document_;
-	static rapidjson::Document::AllocatorType&
-		rapidjson_ugly_document_alloc() {
-		if (!document_)
-			document_.reset(new rapidjson::Document{ rapidjson::kObjectType });
-		return document_->GetAllocator();
-	}
+}
 
-	void set_default_ugly_document(rapidjson::Document* doc) {
-		document_.reset(doc);
-	}
+static std::unique_ptr<rapidjson::Document> document_;
+static rapidjson::Document::AllocatorType&
+	rapidjson_ugly_document_alloc() {
+	if (!document_)
+		document_.reset(new rapidjson::Document{ rapidjson::kObjectType });
+	return document_->GetAllocator();
+}
+
+void set_default_ugly_document(rapidjson::Document* doc) {
+	document_.reset(doc);
+}
+
+namespace archive {
 
 	// rapidjson 到 普通数据结构.
 	//
@@ -47,7 +51,7 @@ namespace static_json {
 		{}
 
 		template <typename T>
-		rapidjson_iarchive& operator>>(nvp<T> const& wrap)
+		rapidjson_iarchive& operator>>(static_json::nvp<T> const& wrap)
 		{
 			load(wrap.name(), wrap.value());
 			return *this;
@@ -78,6 +82,9 @@ namespace static_json {
 				value = json_.GetDouble();
 			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
 				value.assign(json_.GetString(), json_.GetStringLength());
+			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
+				// char 类型直接跳过不作处理, json没有char类型与之对应.
+				;
 			else
 				load(value);
 			return *this;
@@ -104,7 +111,7 @@ namespace static_json {
 			{
 				if constexpr (!std::is_arithmetic_v<std::decay_t<T>>
 					&& !std::is_same_v<std::decay_t<T>, std::string>
-					&& !detail::has_push_back<T>())
+					&& !static_json::detail::has_push_back<T>())
 				{
 					rapidjson_iarchive ja(value);
 					ja >> b;
@@ -113,27 +120,14 @@ namespace static_json {
 			break;
 			case rapidjson::kArrayType:
 			{
-				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
+				if constexpr (static_json::detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
 				{
 					for (auto& a : value.GetArray())
 					{
-						using array_type = std::decay_t<typename T::value_type>;
-
-						if constexpr (access::has_serialize_member<rapidjson_iarchive, array_type>()
-							|| access::has_nonmember_serialize<rapidjson_iarchive, array_type>())
-						{
-							rapidjson_iarchive ja(a);
-							typename T::value_type item;
-							ja >> item;
-							b.push_back(item);
-						}
-						else
-						{
-							array_type tmp;
-							rapidjson_iarchive ja(a);
-							ja >> tmp;
-							b.push_back(tmp);
-						}
+						std::decay_t<typename T::value_type> tmp;
+						rapidjson_iarchive ja(a);
+						ja >> tmp;
+						b.push_back(tmp);
 					}
 				}
 			}
@@ -167,7 +161,7 @@ namespace static_json {
 		template <typename T>
 		void load(T& v)
 		{
-			access::serialize_entry(*this, v);
+			static_json::serialize_adl(*this, v);
 		}
 
 		const rapidjson::Value& json_;
@@ -182,7 +176,7 @@ namespace static_json {
 		{}
 
 		template <typename T>
-		rapidjson_oarchive& operator<<(nvp<T> const& wrap)
+		rapidjson_oarchive& operator<<(static_json::nvp<T> const& wrap)
 		{
 			save(wrap.name(), wrap.value());
 			return *this;
@@ -213,8 +207,14 @@ namespace static_json {
 				json_.SetDouble(value);
 			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
 				json_.SetString(value.c_str(), static_cast<rapidjson::SizeType>(value.size()));
+			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
+				// char 类型直接跳过不作处理, json没有char类型与之对应.
+				;
 			else
+			{
+				json_.SetObject();
 				save(value);
+			}
 			return *this;
 		}
 
@@ -236,34 +236,19 @@ namespace static_json {
 			}
 			else
 			{
-				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
+				if constexpr (static_json::detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
 				{
 					temp.SetArray();
 					for (auto& n : b)
 					{
 						rapidjson::Value arr;
-
-						using array_type = std::decay_t<typename T::value_type>;
-
-						if constexpr (access::has_serialize_member<rapidjson_oarchive, array_type>()
-							|| access::has_nonmember_serialize<rapidjson_oarchive, array_type>())
-						{
-							arr.SetObject();
-							rapidjson_oarchive ja(arr);
-							ja << n;
-						}
-						else
-						{
-							rapidjson_oarchive ja(arr);
-							ja << n;
-						}
-
+						rapidjson_oarchive ja(arr);
+						ja << n;
 						temp.PushBack(arr, rapidjson_ugly_document_alloc());
 					}
 				}
 				else
 				{
-					temp.SetObject();
 					rapidjson_oarchive ja(temp);
 					ja << b;
 				}
@@ -275,7 +260,7 @@ namespace static_json {
 		template <typename T>
 		void save(T& v)
 		{
-			access::serialize_entry(*this, v);
+			static_json::serialize_adl(*this, v);
 		}
 
 		rapidjson::Value& json_;
