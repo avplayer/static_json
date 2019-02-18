@@ -38,36 +38,6 @@ namespace static_json {
 		document_.reset(doc);
 	}
 
-	template <class T>
-	struct rapidjson_input_builtin
-	{
-		const rapidjson::Value& json_;
-		rapidjson_input_builtin(const rapidjson::Value& json)
-			: json_(json)
-		{}
-
-		rapidjson_input_builtin& operator>>(T& value)
-		{
-			if constexpr (std::is_same_v<std::decay_t<T>, int>)
-				value = json_.GetInt();
-			else if constexpr (std::is_same_v<std::decay_t<T>, unsigned int>)
-				value = json_.GetUint();
-			else if constexpr (std::is_same_v<std::decay_t<T>, int64_t>)
-				value = json_.GetInt64();
-			else if constexpr (std::is_same_v<std::decay_t<T>, uint64_t>)
-				value = json_.GetUint64();
-			else if constexpr (std::is_same_v<std::decay_t<T>, bool>)
-				value = json_.GetBool();
-			else if constexpr (std::is_same_v<std::decay_t<T>, float>)
-				value = json_.GetFloat();
-			else if constexpr (std::is_same_v<std::decay_t<T>, double>)
-				value = json_.GetDouble();
-			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
-				value.assign(json_.GetString(), json_.GetStringLength());
-			return *this;
-		}
-	};
-
 	// rapidjson 到 普通数据结构.
 	//
 	struct rapidjson_iarchive
@@ -92,7 +62,24 @@ namespace static_json {
 		template <typename T>
 		rapidjson_iarchive& operator>>(T& value)
 		{
-			load(value);
+			if constexpr (std::is_same_v<std::decay_t<T>, int>)
+				value = json_.GetInt();
+			else if constexpr (std::is_same_v<std::decay_t<T>, unsigned int>)
+				value = json_.GetUint();
+			else if constexpr (std::is_same_v<std::decay_t<T>, int64_t>)
+				value = json_.GetInt64();
+			else if constexpr (std::is_same_v<std::decay_t<T>, uint64_t>)
+				value = json_.GetUint64();
+			else if constexpr (std::is_same_v<std::decay_t<T>, bool>)
+				value = json_.GetBool();
+			else if constexpr (std::is_same_v<std::decay_t<T>, float>)
+				value = json_.GetFloat();
+			else if constexpr (std::is_same_v<std::decay_t<T>, double>)
+				value = json_.GetDouble();
+			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
+				value.assign(json_.GetString(), json_.GetStringLength());
+			else
+				load(value);
 			return *this;
 		}
 
@@ -143,7 +130,7 @@ namespace static_json {
 						else
 						{
 							array_type tmp;
-							rapidjson_input_builtin<array_type> ja(a);
+							rapidjson_iarchive ja(a);
 							ja >> tmp;
 							b.push_back(tmp);
 						}
@@ -157,7 +144,7 @@ namespace static_json {
 			{
 				if constexpr (std::is_arithmetic_v<std::decay_t<T>>)
 				{
-					rapidjson_input_builtin<T> ja(value);
+					rapidjson_iarchive ja(value);
 					ja >> b;
 				}
 			}
@@ -166,7 +153,7 @@ namespace static_json {
 			{
 				if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
 				{
-					rapidjson_input_builtin<std::string> ja(value);
+					rapidjson_iarchive ja(value);
 					ja >> b;
 				}
 			}
@@ -184,37 +171,6 @@ namespace static_json {
 		}
 
 		const rapidjson::Value& json_;
-	};
-
-
-	template <class T>
-	struct rapidjson_output_builtin
-	{
-		rapidjson::Value& json_;
-		rapidjson_output_builtin(rapidjson::Value& json)
-			: json_(json)
-		{}
-
-		rapidjson_output_builtin& operator<<(T& value)
-		{
-			if constexpr (std::is_same_v<std::decay_t<T>, int>)
-				json_.SetInt(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, unsigned int>)
-				json_.SetUint(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, int64_t>)
-				json_.SetInt64(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, uint64_t>)
-				json_.SetUint64(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, bool>)
-				json_.SetBool(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, float>)
-				json_.SetFloat(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, double>)
-				json_.SetDouble(value);
-			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
-				json_.SetString(value.c_str(), static_cast<rapidjson::SizeType>(value.size()));
-			return *this;
-		}
 	};
 
 	// 普通数据结构 到 rapidjson.
@@ -241,7 +197,24 @@ namespace static_json {
 		template <typename T>
 		rapidjson_oarchive& operator<<(T& value)
 		{
-			save(value);
+			if constexpr (std::is_same_v<std::decay_t<T>, int>)
+				json_.SetInt(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, unsigned int>)
+				json_.SetUint(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, int64_t>)
+				json_.SetInt64(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, uint64_t>)
+				json_.SetUint64(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, bool>)
+				json_.SetBool(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, float>)
+				json_.SetFloat(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, double>)
+				json_.SetDouble(value);
+			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
+				json_.SetString(value.c_str(), static_cast<rapidjson::SizeType>(value.size()));
+			else
+				save(value);
 			return *this;
 		}
 
@@ -258,7 +231,7 @@ namespace static_json {
 			if constexpr (std::is_arithmetic_v<std::decay_t<T>>
 				|| std::is_same_v<std::decay_t<T>, std::string>)
 			{
-				rapidjson_output_builtin<T> ja(temp);
+				rapidjson_oarchive ja(temp);
 				ja << b;
 			}
 			else
@@ -281,7 +254,7 @@ namespace static_json {
 						}
 						else
 						{
-							rapidjson_output_builtin<array_type> ja(arr);
+							rapidjson_oarchive ja(arr);
 							ja << n;
 						}
 
