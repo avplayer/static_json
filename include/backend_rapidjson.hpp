@@ -36,7 +36,7 @@ static rapidjson::Document::AllocatorType&
 	return document_->GetAllocator();
 }
 
-void set_default_ugly_document(rapidjson::Document* doc) {
+static void set_default_ugly_document(rapidjson::Document* doc) {
 	document_.reset(doc);
 }
 
