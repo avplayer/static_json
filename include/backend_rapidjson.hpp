@@ -245,8 +245,8 @@ namespace static_json {
 
 						using array_type = std::decay_t<typename T::value_type>;
 
-						if constexpr (access::has_serialize_member<rapidjson_iarchive, array_type>()
-							|| access::has_nonmember_serialize<rapidjson_iarchive, array_type>())
+						if constexpr (access::has_serialize_member<rapidjson_oarchive, array_type>()
+							|| access::has_nonmember_serialize<rapidjson_oarchive, array_type>())
 						{
 							arr.SetObject();
 							rapidjson_oarchive ja(arr);
