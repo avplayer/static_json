@@ -100,34 +100,34 @@ namespace static_json {
 
 // 用于serialize成员函数中声明要序列化的成员.
 #define JSON_SERIALIZATION_NVP(name)	\
-    make_nvp(JSON_PP_STRINGIZE(name), name)
+    static_json::make_nvp(JSON_PP_STRINGIZE(name), name)
 
 #define JSON_SERIALIZATION_BASE_OBJECT_NVP(name) \
-	make_nvp(JSON_PP_STRINGIZE(name), base_object<name>(*this))
+	static_json::make_nvp(JSON_PP_STRINGIZE(name), base_object<name>(*this))
 
 // 侵入式, 指定key.
 #define JSON_SERIALIZATION_KEY_NVP(key, name)	\
-    make_nvp(key, name)
+    static_json::make_nvp(key, name)
 
 // 侵入式, 指定key和基类.
 #define JSON_SERIALIZATION_KEY_BASE_OBJECT_NVP(key, name) \
-	make_nvp(key, base_object<name>(*this))
+	static_json::make_nvp(key, base_object<name>(*this))
 
 // 非侵入式，避免类成员名字生成不正确.
 #define JSON_NI_SERIALIZATION_NVP(classname, name)	\
-    make_nvp(JSON_PP_STRINGIZE(name), classname . name)
+    static_json::make_nvp(JSON_PP_STRINGIZE(name), classname . name)
 
 // 非侵入式, 指定基类.
 #define JSON_NI_SERIALIZATION_BASE_OBJECT_NVP(classname, name)	\
-    make_nvp(JSON_PP_STRINGIZE(name), base_object<classname>(*this))
+    static_json::make_nvp(JSON_PP_STRINGIZE(name), base_object<classname>(*this))
 
 // 非侵入式, 指定key.
 #define JSON_NI_SERIALIZATION_KEY_NVP(key, classname, name)	\
-    make_nvp(key, classname . name)
+    static_json::make_nvp(key, classname . name)
 
 // 非侵入式, 指定基类和key.
 #define JSON_NI_SERIALIZATION_KEY_BASE_OBJECT_NVP(key, classname, name)	\
-    make_nvp(key, base_object<classname>(*this))
+    static_json::make_nvp(key, base_object<classname>(*this))
 }
 
 
