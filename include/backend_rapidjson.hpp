@@ -111,7 +111,7 @@ namespace archive {
 			{
 				if constexpr (!std::is_arithmetic_v<std::decay_t<T>>
 					&& !std::is_same_v<std::decay_t<T>, std::string>
-					&& !detail::has_push_back<T>())
+					&& !static_json::detail::has_push_back<T>())
 				{
 					rapidjson_iarchive ja(value);
 					ja >> b;
@@ -120,7 +120,7 @@ namespace archive {
 			break;
 			case rapidjson::kArrayType:
 			{
-				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
+				if constexpr (static_json::detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
 				{
 					for (auto& a : value.GetArray())
 					{
@@ -161,7 +161,7 @@ namespace archive {
 		template <typename T>
 		void load(T& v)
 		{
-			serialize_adl(*this, v);
+			static_json::serialize_adl(*this, v);
 		}
 
 		const rapidjson::Value& json_;
@@ -236,7 +236,7 @@ namespace archive {
 			}
 			else
 			{
-				if constexpr (detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
+				if constexpr (static_json::detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
 				{
 					temp.SetArray();
 					for (auto& n : b)
@@ -260,7 +260,7 @@ namespace archive {
 		template <typename T>
 		void save(T& v)
 		{
-			serialize_adl(*this, v);
+			static_json::serialize_adl(*this, v);
 		}
 
 		rapidjson::Value& json_;
