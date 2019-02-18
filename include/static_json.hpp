@@ -59,27 +59,6 @@ namespace static_json {
 		template<class B, class D>
 		using base_cast = std::conditional<std::is_const_v<D>, const B, B>;
 
-		template<class T, class Archive>
-		using has_serialize_t = decltype(std::declval<T&>().serialize(std::declval<Archive&>()));
-		template<class Archive, class T>
-		using has_nonmember_serialize_t = decltype(serialize(std::declval<Archive&>(), std::declval<T&>()));
-
-		// has_serialize_member 实现.
-		template<class Archive, class T, bool result = std::is_same_v<void, has_serialize_t<T, Archive>>>
-		static constexpr bool has_serialize_helper(int) { return result; }
-		template<class Archive, class T>
-		static constexpr bool has_serialize_helper(...) { return false; }
-		template<class Archive, class T>
-		static constexpr bool has_serialize_member() { return has_serialize_helper<Archive, T>(0); }
-
-		// has_nonmember_serialize 实现.
-		template<class Archive, class T, bool result = std::is_same_v<void, has_nonmember_serialize_t<Archive, T>>>
-		static constexpr bool has_nonmember_serialize_helper(int) { return result; }
-		template<class Archive, class T>
-		static constexpr bool has_nonmember_serialize_helper(...) { return false; }
-		template<class Archive, class T>
-		static constexpr bool has_nonmember_serialize() { return has_nonmember_serialize_helper<Archive, T>(0); }
-
 		template<class T, class U>
 		static T & cast_reference(U & u) {
 			return static_cast<T &>(u);
