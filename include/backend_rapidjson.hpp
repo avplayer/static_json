@@ -17,9 +17,6 @@
 // 分别对应rapidjson中
 // Int, Uint,         Int64,   Uint64,   Bool, Float, Double, String,      Array
 //
-// 限制条件:
-// json必须是一个Object, 暂不支持json是单个数组或单个类型, 比如不能直接将 Array 序列化到
-// std::vector, 而必须是在Object中的Array.
 
 namespace static_json {
 
@@ -85,6 +82,16 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
+			else if constexpr (static_json::detail::has_push_back<T>())
+			{
+				for (auto& a : json_.GetArray())
+				{
+					std::decay_t<typename T::value_type> tmp;
+					rapidjson_iarchive ja(a);
+					ja >> tmp;
+					value.push_back(tmp);
+				}
+			}
 			else
 				load(value);
 			return *this;
@@ -210,6 +217,17 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
+			else if constexpr (static_json::detail::has_push_back<T>())
+			{
+				json_.SetArray();
+				for (auto& n : value)
+				{
+					rapidjson::Value arr;
+					rapidjson_oarchive ja(arr);
+					ja << n;
+					json_.PushBack(arr, rapidjson_ugly_document_alloc());
+				}
+			}
 			else
 			{
 				json_.SetObject();

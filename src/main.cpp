@@ -6,6 +6,7 @@
 //
 
 #include <iostream>
+#include <list>
 #include "static_json.hpp"
 
 using namespace static_json;
@@ -19,6 +20,11 @@ public:
 	void set_name(std::string s) { name = s; };
 	void set_ismammal(bool b) { is_mammal = b; };
 	void set_height(double h) { height = h; }
+	void set_game() {
+		game.push_back("hdl");
+		game.push_back("gta");
+		game.push_back("skylines");
+	}
 
 	// 用于输出animal到std::cout.
 	friend std::ostream& operator<< (std::ostream&, const animal&);
@@ -47,6 +53,7 @@ private:
 	bool is_mammal;
 	std::string name;
 	double height;
+	std::vector<std::string> game;
 };
 
 std::ostream& operator<< (std::ostream& stream, const animal& a)
@@ -56,7 +63,11 @@ std::ostream& operator<< (std::ostream& stream, const animal& a)
 			<< " is_mammal: " << a.is_mammal
 			<< " name: " << a.name
 			<< " height: " << a.height
-			<< "]"
+			<< " game: [";
+	for (auto& v : a.game)
+		stream << "[" << v << "]";
+	stream
+			<< "]]"
 	;
 
 	return stream;
@@ -72,7 +83,9 @@ void serialize(Archive& ar, animal& a)
 		& JSON_NI_SERIALIZATION_NVP(a, legs)
 		& JSON_NI_SERIALIZATION_NVP(a, is_mammal)
 		& JSON_NI_SERIALIZATION_NVP(a, height)
-		& JSON_NI_SERIALIZATION_NVP(a, name);
+		& JSON_NI_SERIALIZATION_NVP(a, name)
+		& JSON_NI_SERIALIZATION_NVP(a, game)
+		;
 }
 #endif
 
@@ -118,6 +131,7 @@ public:
 		tmp.set_name("fuck");
 		tmp.set_ismammal(true);
 		tmp.set_height(9.83);
+		tmp.set_game();
 
 		fat.push_back(tmp);
 		tmp.set_leg(11);
@@ -181,6 +195,26 @@ int main()
 	rapidjson::Value json{ rapidjson::kObjectType };
 
 	{
+		std::vector<animal> animals;
+		{
+			animal a;
+			a.set_age(1000234234235);
+			a.set_name("Horse");
+			a.set_leg(4);
+			a.set_ismammal(true);
+			a.set_height(9.83);
+			a.set_game();
+
+			animals.push_back(a);
+			a.set_age(5);
+			animals.push_back(a);
+		}
+
+		auto s = to_json_string(animals);
+		std::cout << "animals: " << s << std::endl;
+	}
+
+	{
 		// 普通c++结构体序列化到json对象.
 		animal a;
 		a.set_age(1000234234235);
@@ -188,6 +222,7 @@ int main()
 		a.set_leg(4);
 		a.set_ismammal(true);
 		a.set_height(9.83);
+		a.set_game();
 
 		to_json(a, json);
 
@@ -218,6 +253,7 @@ int main()
 		c.set_name("Horse");
 		c.set_ismammal(true);
 		c.set_height(9.83);
+		c.set_game();
 		to_json(c, json);
 
 		rapidjson::StringBuffer buffer;
@@ -243,7 +279,7 @@ int main()
 
 		std::cout << "string -> animal: " << a << std::endl;
 
-		std::cout << "animal -> string: " << to_json_string(a);
+		std::cout << "animal -> string: " << to_json_string(a) << std::endl;
 	}
 
 	return 0;
