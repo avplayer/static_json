@@ -13,7 +13,9 @@
 #include <vector>
 #include <type_traits>
 
+#ifndef BACKEND_RAPIDJSON
 #define BACKEND_RAPIDJSON
+#endif
 
 namespace static_json {
 
