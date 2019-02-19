@@ -151,15 +151,17 @@ namespace static_json {
 	}
 
 	template<class T>
-	void from_json_string(T& a, std::string_view str)
+	bool from_json_string(T& a, std::string_view str)
 	{
 		rapidjson::Document doc;
-		doc.Parse(str.data());
+		if (doc.Parse(str.data()).HasParseError())
+			return false;
 
 		rapidjson::Value v;
 		doc.Swap(v);
 
 		from_json(a, v);
+		return true;
 	}
 
 	template<class T>
