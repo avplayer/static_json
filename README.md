@@ -57,8 +57,7 @@ struct proto {
 
 // 序列化
 proto test1 {1, "abcd", 1.83};
-
-std::string a = to_json_string(test1); // 将序列为到一个json数组字符串.
+std::string a = to_json_string(test1); // 将序列为到一个json字符串.
 
 // 反序列化
 
@@ -87,8 +86,7 @@ void serialize(Archive& ar, proto& a)
 
 // 序列化
 proto test1 {1, "abcd", 1.83};
-
-std::string a = to_json_string(test1); // 将序列为到一个json数组字符串.
+std::string a = to_json_string(test1); // 将序列为到一个json字符串.
 
 // 反序列化
 
