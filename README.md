@@ -60,7 +60,6 @@ proto test1 {1, "abcd", 1.83};
 std::string a = to_json_string(test1); // 将序列为到一个json字符串.
 
 // 反序列化
-
 proto test2;
 from_json_string(test2, a); // test2拥有和test1一样的内容.
 ```
@@ -89,7 +88,6 @@ proto test1 {1, "abcd", 1.83};
 std::string a = to_json_string(test1); // 将序列为到一个json字符串.
 
 // 反序列化
-
 proto test2;
 from_json_string(test2, a); // test2拥有和test1一样的内容.
 ```
