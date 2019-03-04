@@ -167,7 +167,7 @@ namespace static_json {
 	}
 
 	template<class T>
-	std::string to_json_string(T& a)
+	std::string to_json_string(const T& a)
 	{
 		rapidjson::Value v{ rapidjson::kObjectType };
 		to_json(a, v);
