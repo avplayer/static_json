@@ -19,17 +19,16 @@
 
 namespace static_json {
 
-	namespace detail {
+	namespace traits {
 		template<class T>
 		using has_push_back_t = decltype(std::declval<T&>().push_back(std::declval<typename T::value_type&>()));
-
 		template<class T, bool result = std::is_same_v<void, has_push_back_t<T>>>
 		constexpr bool has_push_back_helper(int) { return result; }
 		template<class T>
 		static constexpr bool has_push_back_helper(...) { return false; }
 		template<class T>
 		static constexpr bool has_push_back() { return has_push_back_helper<T>(0); }
-	} // namespace detail
+	} // namespace traits
 
 	template<class T>
 	struct nvp :

@@ -82,7 +82,7 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
-			else if constexpr (static_json::detail::has_push_back<T>())
+			else if constexpr (static_json::traits::has_push_back<T>())
 			{
 				for (auto& a : json_.GetArray())
 				{
@@ -118,7 +118,7 @@ namespace archive {
 			{
 				if constexpr (!std::is_arithmetic_v<std::decay_t<T>>
 					&& !std::is_same_v<std::decay_t<T>, std::string>
-					&& !static_json::detail::has_push_back<T>())
+					&& !static_json::traits::has_push_back<T>())
 				{
 					rapidjson_iarchive ja(value);
 					ja >> b;
@@ -127,7 +127,7 @@ namespace archive {
 			break;
 			case rapidjson::kArrayType:
 			{
-				if constexpr (static_json::detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
+				if constexpr (static_json::traits::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
 				{
 					for (auto& a : value.GetArray())
 					{
@@ -217,7 +217,7 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
-			else if constexpr (static_json::detail::has_push_back<T>())
+			else if constexpr (static_json::traits::has_push_back<T>())
 			{
 				json_.SetArray();
 				for (auto& n : value)
@@ -254,7 +254,7 @@ namespace archive {
 			}
 			else
 			{
-				if constexpr (static_json::detail::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
+				if constexpr (static_json::traits::has_push_back<T>()) // 如果是兼容数组类型, 则按数组来序列化.
 				{
 					temp.SetArray();
 					for (auto& n : b)
