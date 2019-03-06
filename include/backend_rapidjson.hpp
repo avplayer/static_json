@@ -82,6 +82,13 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
+			else if constexpr (static_json::traits::is_std_optional_v<T>)
+			{
+				rapidjson_iarchive ja(json_);
+				typename T::value_type v;
+				ja >> v;
+				value = v;
+			}
 			else if constexpr (static_json::traits::has_push_back<T>())
 			{
 				for (auto& a : json_.GetArray())
@@ -143,20 +150,14 @@ namespace archive {
 			case rapidjson::kTrueType:
 			case rapidjson::kNumberType:
 			{
-				if constexpr (std::is_arithmetic_v<std::decay_t<T>>)
-				{
-					rapidjson_iarchive ja(value);
-					ja >> b;
-				}
+				rapidjson_iarchive ja(value);
+				ja >> b;
 			}
 			break;
 			case rapidjson::kStringType:
 			{
-				if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
-				{
-					rapidjson_iarchive ja(value);
-					ja >> b;
-				}
+				rapidjson_iarchive ja(value);
+				ja >> b;
 			}
 			break;
 			default:
@@ -217,6 +218,14 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
+			else if constexpr (static_json::traits::is_std_optional_v<T>)
+			{
+				if (value)
+				{
+					rapidjson_oarchive ja(json_);
+					ja << value.value();
+				}
+			}
 			else if constexpr (static_json::traits::has_push_back<T>())
 			{
 				json_.SetArray();
@@ -263,6 +272,18 @@ namespace archive {
 						rapidjson_oarchive ja(arr);
 						ja << n;
 						temp.PushBack(arr, rapidjson_ugly_document_alloc());
+					}
+				}
+				else if constexpr (static_json::traits::is_std_optional_v<T>)
+				{
+					if (b)
+					{
+						rapidjson_oarchive ja(temp);
+						ja << b.value();
+					}
+					else
+					{
+						return;
 					}
 				}
 				else

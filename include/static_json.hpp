@@ -11,6 +11,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <optional>
 #include <type_traits>
 
 #ifndef BACKEND_RAPIDJSON
@@ -20,14 +21,22 @@
 namespace static_json {
 
 	namespace traits {
-		template<class T>
+		template<typename T>
 		using has_push_back_t = decltype(std::declval<T&>().push_back(std::declval<typename T::value_type&>()));
-		template<class T, bool result = std::is_same_v<void, has_push_back_t<T>>>
+		template<typename T, bool result = std::is_same_v<void, has_push_back_t<T>>>
 		constexpr bool has_push_back_helper(int) { return result; }
-		template<class T>
+		template<typename T>
 		static constexpr bool has_push_back_helper(...) { return false; }
-		template<class T>
+		template<typename T>
 		static constexpr bool has_push_back() { return has_push_back_helper<T>(0); }
+
+		template<typename T, typename U = void>
+		struct is_std_optional : public std::false_type {};
+		template<typename T>
+		struct is_std_optional<T, std::enable_if_t<std::is_same_v<std::decay_t<T>, std::optional<typename T::value_type>>>>
+			: public std::true_type {};
+		template<typename T>
+		static constexpr bool is_std_optional_v = is_std_optional<T>::value;
 	} // namespace traits
 
 	template<class T>
