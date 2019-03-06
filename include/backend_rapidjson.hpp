@@ -82,6 +82,19 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
+			else if constexpr (static_json::traits::is_mapping_v<T>)
+			{
+				if (!json_.IsObject())
+					return *this;
+				for (auto & o : json_.GetObject())
+				{
+					std::string key(o.name.GetString(), o.name.GetStringLength());
+					typename T::mapped_type v;
+					rapidjson_iarchive ja(o.value);
+					ja >> v;
+					value[key] = v;
+				}
+			}
 			else if constexpr (static_json::traits::is_std_optional_v<T>)
 			{
 				rapidjson_iarchive ja(json_);
@@ -218,6 +231,17 @@ namespace archive {
 			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
 				// char 类型直接跳过不作处理, json没有char类型与之对应.
 				;
+			else if constexpr (static_json::traits::is_mapping_v<T>)
+			{
+				rapidjson::Value temp;
+				json_.SetObject();
+				for (auto& v : value)
+				{
+					rapidjson_oarchive ja(temp);
+					ja << v.second;
+					json_.AddMember(rapidjson::StringRef(v.first.c_str()), temp, rapidjson_ugly_document_alloc());
+				}
+			}
 			else if constexpr (static_json::traits::is_std_optional_v<T>)
 			{
 				if (value)
@@ -284,6 +308,17 @@ namespace archive {
 					else
 					{
 						return;
+					}
+				}
+				else if constexpr (static_json::traits::is_mapping_v<T>)
+				{
+					rapidjson::Value value;
+					temp.SetObject();
+					for (auto& v : b)
+					{
+						rapidjson_oarchive ja(value);
+						ja << v.second;
+						temp.AddMember(rapidjson::StringRef(v.first.c_str()), value, rapidjson_ugly_document_alloc());
 					}
 				}
 				else

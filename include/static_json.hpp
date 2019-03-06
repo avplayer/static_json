@@ -11,6 +11,8 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
+#include <unordered_map>
 #include <optional>
 #include <type_traits>
 
@@ -37,6 +39,16 @@ namespace static_json {
 			: public std::true_type {};
 		template<typename T>
 		static constexpr bool is_std_optional_v = is_std_optional<T>::value;
+
+		template<typename T, typename U = void, typename V = void>
+		struct is_mapping : public std::false_type {};
+		template<typename T>
+		struct is_mapping<T, std::enable_if_t<std::is_same_v<std::string,
+			std::decay_t<typename T::key_type>>>, std::void_t<typename T::mapped_type>>
+			: public std::true_type {};
+		template<typename T>
+		static constexpr bool is_mapping_v = is_mapping<T>::value;
+
 	} // namespace traits
 
 	template<class T>
