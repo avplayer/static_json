@@ -238,7 +238,7 @@ namespace archive {
 					json_.AddMember(rapidjson::StringRef(v.first.c_str()), temp, rapidjson_ugly_document_alloc());
 				}
 			}
-			else if constexpr (static_json::traits::is_std_optional_v<T>)
+			else if constexpr (static_json::traits::is_std_optional_v<std::decay_t<T>>)
 			{
 				if (value)
 				{
@@ -246,7 +246,9 @@ namespace archive {
 					ja << value.value();
 				}
 			}
-			else if constexpr (static_json::traits::has_push_back<T>())
+			else if constexpr (static_json::traits::has_push_back<std::decay_t<T>>() &&
+				!std::is_same_v<std::decay_t<T>, std::string> &&
+				!std::is_same_v<std::decay_t<T>, std::wstring>)
 			{
 				json_.SetArray();
 				for (auto& n : value)
