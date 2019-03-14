@@ -22,6 +22,7 @@ arch:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - make -j4
+	- ./static_json
 
 script:
   - "curl -s https://raw.githubusercontent.com/Jackarain/arch-travis/master/arch-travis.sh | bash"
