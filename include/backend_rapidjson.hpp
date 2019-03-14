@@ -79,9 +79,6 @@ namespace archive {
 				value = json_.GetDouble();
 			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
 				value.assign(json_.GetString(), json_.GetStringLength());
-			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
-				// char 类型直接跳过不作处理, json没有char类型与之对应.
-				;
 			else if constexpr (static_json::traits::is_mapping_v<T>)
 			{
 				if (!json_.IsObject())
@@ -147,7 +144,9 @@ namespace archive {
 			break;
 			case rapidjson::kArrayType:
 			{
-				if constexpr (static_json::traits::has_push_back<T>()) // 如果是兼容数组类型, 则按数组使用push_back保存.
+				if constexpr (static_json::traits::has_push_back<T>() &&
+						!std::is_same_v<std::decay_t<T>, std::string> &&
+						!std::is_same_v<std::decay_t<T>, std::wstring>)
 				{
 					for (auto& a : value.GetArray())
 					{
@@ -228,9 +227,6 @@ namespace archive {
 				json_.SetDouble(value);
 			else if constexpr (std::is_same_v<std::decay_t<T>, std::string>)
 				json_.SetString(value.c_str(), static_cast<rapidjson::SizeType>(value.size()));
-			else if constexpr (std::is_same_v<std::decay_t<T>, char>)
-				// char 类型直接跳过不作处理, json没有char类型与之对应.
-				;
 			else if constexpr (static_json::traits::is_mapping_v<T>)
 			{
 				rapidjson::Value temp;
