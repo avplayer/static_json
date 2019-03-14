@@ -1,6 +1,8 @@
 
 # c++/json serialization
 
+[![Build Status](https://travis-ci.org/avplayer/static_json.svg?branch=master)](https://travis-ci.org/avplayer/static_json)
+
 ## Introduction
 
 Allows conversion from a C++ structure to json, or from a json to a C++ structure.
@@ -56,10 +58,10 @@ struct proto {
 
 
 proto test1 {1, "abcd", 1.83};
-std::string a = to_json_string(test1); // 将序列为到一个json字符串.
+std::string a = to_json_string(test1);
 
 proto test2;
-from_json_string(test2, a); // test2拥有和test1一样的内容.
+from_json_string(test2, a); // test2 same as test1.
 ```
 
 
@@ -82,10 +84,10 @@ void serialize(Archive& ar, proto& a)
 }
 
 proto test1 {1, "abcd", 1.83};
-std::string a = to_json_string(test1); // 将序列为到一个json字符串.
+std::string a = to_json_string(test1);
 
 proto test2;
-from_json_string(test2, a); // test2拥有和test1一样的内容.
+from_json_string(test2, a); // test2 same as test1.
 ```
 
 
