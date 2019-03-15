@@ -22,7 +22,7 @@ You can simply include static_json.hpp and rapidjson libraries (rapidjson is als
 
 ## Get started quickly
 
-```
+```cpp
 #include "static_json.hpp"
 
 int main() {
@@ -41,7 +41,7 @@ int main() {
 
 ## Invasive c++ structure serialization
 
-```
+```cpp
 struct proto {
 	int type;
 	std::string name;
@@ -68,7 +68,7 @@ from_json_string(test2, a); // test2 same as test1.
 ## Non-intrusive c++ structure serialization
 
 
-```
+```cpp
 struct proto {
 	int type;
 	std::string name;
