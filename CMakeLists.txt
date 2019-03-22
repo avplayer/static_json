@@ -76,15 +76,13 @@ if (NOT MSVC)
 	endif()
 endif()
 
-
-
 include_directories(
-${CMAKE_CURRENT_SOURCE_DIR}/include
-${CMAKE_CURRENT_SOURCE_DIR}/include/rapidjson/include
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/include/rapidjson/include
 )
 
 add_executable(static_json
-  src/main.cpp
-  include/static_json.hpp
+	src/main.cpp
+	include/static_json.hpp
 )
 
