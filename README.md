@@ -1,7 +1,6 @@
 
 # c++/json serialization
 
-[![Build Status](https://travis-ci.org/avplayer/static_json.svg?branch=master)](https://travis-ci.org/avplayer/static_json)
 
 ## Introduction
 
